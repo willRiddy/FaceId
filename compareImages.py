@@ -8,8 +8,8 @@ import neuralnetworks as nN
 
 network = nN.Supervised(5000, 3000, 1, 1.3)
 
-targets = 'C:/Users/willi/Documents/A-Levels/Computing/Coursework/FaceRecognition/recogOpenCV/targets/'
-pictures = 'C:/Users/willi/Documents/A-Levels/Computing/Coursework/FaceRecognition/recogOpenCV/captureFrames/' # path to the photos
+targets = 'targets/'
+pictures = 'captureFrames/' # path to the photos
 
 while True:
     for picture in pictures:

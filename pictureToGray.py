@@ -1,7 +1,7 @@
 import cv2
 import os
 
-path = 'C:/Users/willi/Documents/A-Levels/Computing/Coursework/FaceRecognition/recogOpenCV/targets/'
+path = 'targets/'
 # path to the test photos
 dim = (50, 50)
 

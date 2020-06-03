@@ -7,8 +7,8 @@ import numpy as np
 import neuralNetworks as nN
 
 network = nN.Supervised(5000, 3000, 1, 1.3)
-pictures = 'C:/Users/willi/OneDrive/Documents/Python/FaceRecognition/recogOpenCV/captureFrames' # path to the photos
-targets = 'C:/Users/willi/OneDrive/Documents/Python/FaceRecognition/recogOpenCV/targets'
+pictures = 'captureFrames' # path to the photos
+targets = 'targets'
 
 def compareNames(picture, target):
     if picture == target:
