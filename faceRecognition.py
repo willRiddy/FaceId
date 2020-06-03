@@ -1,11 +1,15 @@
 import cv2
 import numpy as np
 
-path = 'C:/Users/willi/OneDrive/Documents/Python/FaceRecognition/recogOpenCV/captureFrames/'
+'''
+Test comment - Not my code
+'''
+
+path = 'captureFrames/'
 
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-eye_cascade = cv2.CascadeClassifier('C:/Users/willi/Documents/A-Levels/Computing/Coursework/FaceRecognition/recogOpenCV/haarcascade_eye.xml')
-mouth_cascade = cv2.CascadeClassifier('C:/Users/willi/Documents/A-Levels/Computing/Coursework/FaceRecognition/recogOpenCV/haarcascade_mcs_mouth.xml')
+eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
+mouth_cascade = cv2.CascadeClassifier('haarcascade_mcs_mouth.xml')
 
 class faceRecognition():
 
