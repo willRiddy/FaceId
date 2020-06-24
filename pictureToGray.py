@@ -1,7 +1,7 @@
 import cv2
 import os
 
-path = 'targets/'
+path = 'C:/Users/willi/OneDrive/Desktop/FaceId/targets/'
 # path to the test photos
 dim = (50, 50)
 

@@ -4,11 +4,33 @@ Saves the images in a text file for training data
 import os
 import cv2
 import numpy as np
-import neuralNetworks as nN
+import neuralNetworks_2 as nN
 
-network = nN.Supervised(5000, 3000, 1, 1.3)
+network_structure = [5000, 3000, 500, 1]
+lr = 0.3
+
+network = nN.Supervised(network_structure, 1)
 pictures = 'captureFrames' # path to the photos
 targets = 'targets'
+weights = 'weights/'
+
+class Train:
+
+    def __init__(self, data):
+        self.data = data
+        self.network_data = None
+
+    def convert(self, farray): # converts the data into 'network' data
+        return np.asfarray(farray[1:])
+
+    def getTarget(self, target):
+        return np.asfarray(target[0])
+
+    def train(self):
+        for data in self.data:
+            target = self.getTarget(data)
+            inputs = self.convert(data)
+            network.train(inputs, target)
 
 def compareNames(picture, target):
     if picture == target:
@@ -28,6 +50,6 @@ with open('training_data.txt', 'a') as trainingData:
 
         isTarget = [compareNames(picture.partition('!')[0], target.partition('!')[0])]
         final_array = isTarget + picture_array + target_array
-        trainingData.write('{}\n'.format(final_array))   
+        trainingData.write('{}\n'.format(final_array))
 
-    
+#np.save(f'{weights}weights.npy', network.weights)
