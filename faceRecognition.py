@@ -7,7 +7,7 @@ Not completely my code
 
 path = 'captureFrames/'
 
-face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml') #haarcascade to recognise faces
+face_cascade = cv2.CascadeClassifier('haarcascade/haarcascade_frontalface_default.xml') #haarcascade to recognise faces
 
 class faceRecognition():
 
