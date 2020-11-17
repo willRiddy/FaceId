@@ -1,5 +1,5 @@
 '''
-This code looks at a phot and saves all the photos in it in a folder
+This code looks at a phot0 and saves all the photos in it in a folder
 '''
 
 import cv2
