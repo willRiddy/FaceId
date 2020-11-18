@@ -30,7 +30,6 @@ Tom Cruise
 Samuel L. Jackson
 Robin Williams
 Don Cheadle
-Andonio Banderas
 Eddie Murphy
 Anthony Hopkins
 Omar Sharif
@@ -54,7 +53,6 @@ Tommy Lee Jones
 George Clooney
 Bruce Willis
 Russell Crowe
-Bill Murray
 Nicolas Cage
 Joe Pesci
 Brad Pitt

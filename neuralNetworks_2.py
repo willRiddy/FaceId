@@ -6,7 +6,7 @@ import scipy.special
 class Supervised:
 
     # initialise the neural network
-    def __init__(self, nodes, learningrate, weights=None):
+    def __init__(self, nodes, learningrate, weights=None, bias=None):
         # set number of nodes in each input, hidden, output layer
         self.nodes = nodes
         self.nodesAdjust = nodes[1:]
@@ -19,10 +19,12 @@ class Supervised:
         # learning rate
         self.lr = learningrate
 
-        if not weights:
-            self.createWeights()
-        else:
+        try:
+            if not weights:
+                self.createWeights()
+        except ValueError:
             self.weights = weights
+            self.bias = bias
 
         # activation function is the sigmoid function
         self.activation_function = lambda x: scipy.special.expit(x)
@@ -62,14 +64,20 @@ class Supervised:
         inputs = np.array(inputs_list, ndmin=2).T
 
         self.outputsList.append(inputs) #adds the input vector into the network
-
+        i = 0
+        print(len(self.weights))
         for weight, bias in zip(self.weights, self.bias): #feeds through the network
+            print(f'pass {i}')
             inputs = np.dot(weight, inputs) # feed forward
             inputs += bias
             inputs = self.activation_function(inputs) # uses sigmoid function
             self.outputsList.append(inputs)
+            i += 1
         
         self.outputsListAdjusted = self.outputsList[1:]
         final_outputs = inputs #just to clarify
 
         return final_outputs
+
+# network = Supervised([2, 2, 7], 0.3)
+# print(network.query([0.4, 0.5]))

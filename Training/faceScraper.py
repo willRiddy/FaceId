@@ -12,7 +12,8 @@ class AppURLopener(urllib.request.FancyURLopener):
 
 def resizeImage(img):
     resized = cv2.resize(img, dim, interpolation=cv2.INTER_AREA) # make all the faces the same size
-    return resized
+    resized_gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY) # Turning image gray
+    return resized_gray
 
 opener = AppURLopener()
 
@@ -22,7 +23,7 @@ celebs_lines = celebs.readlines()
 for celeb in celebs_lines:
     celeb = celeb.replace('\n', '')
     query = celeb.replace(' ', '+')# + signs needed for query in google
-    html = opener.open(f'https://www.google.com/search?q={query}+portrait&tbm=isch&ved=2ahUKEwiJ6fye7IntAhUR-YUKHYqbBucQ2-cCegQIABAA&oq=leonardo+dicaprio&gs_lcp=CgNpbWcQAzIECAAQQzIHCAAQsQMQQzIECAAQQzIFCAAQsQMyBwgAELEDEEMyBAgAEEMyBQgAELEDMgUIABCxAzIHCAAQsQMQQzIHCAAQsQMQQ1DNsQFY17IBYKq0AWgAcAB4AIABS4gBS5IBATGYAQCgAQGqAQtnd3Mtd2l6LWltZ8ABAQ&sclient=img&ei=tuWzX4m2C5HylwSKt5q4Dg&bih=619&biw=1280&safe=active&surl=1')
+    html = opener.open(f'https://www.google.com/search?q={query}+portrait&safe=active&source=lnms&tbm=isch&sa=X&ved=2ahUKEwjAjr-A2ovtAhWhoFwKHUpqBuIQ_AUoAXoECAQQAw&biw=1280&bih=619&surl=1')
 
     bs = BeautifulSoup(html, 'html.parser')
     images = bs.find_all('img', {'src':re.compile('.jpg')})
