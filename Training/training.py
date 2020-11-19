@@ -5,7 +5,7 @@ import sys
 sys.path.insert(1, os.getcwd())
 import neuralNetworks_2
 
-network = neuralNetworks_2.Supervised([5000, 2500, 1000, 1000, 2], 0.3)
+network = neuralNetworks_2.Supervised([5000, 2500, 1000, 2], 0.3)
 path = f'{os.getcwd()}/Training/Training_Faces/'
 
 def compareNames(picture, target):
@@ -57,58 +57,63 @@ def test():
         # gets the outputs
         for picture in final_list:
             output = network.query(picture)
+            print(f'Output pairs: {output[0]},{output[1]}')
             if output[0] > output[1]:
                 outputs.append(1)
             else:
                 outputs.append(0)
+            print('##########')
 
     percentCorrect = (sum(outputs)/len(outputs)) * 100
     print(percentCorrect)
+
+epochs = 5
+for i in range(epochs):
+    # Get photos from right person
+    celebList = os.listdir(path)
+    for i, celeb in enumerate(celebList):
+        print(f'{i}/{len(celebList)}')
+        image_names = []
+        isTargets = []
+        images = []
+        input_array = []
+
+        for i, image in enumerate(os.listdir(f'{path}{celeb}')):
+            img = cv2.imread(f'{path}{celeb}/{image}', cv2.IMREAD_GRAYSCALE) # the path of the picture
+            binary_picture = makeLearning(img)
+            if i != 1:
+                image_names.append(image)
+                images.append(binary_picture)
+            else:
+                target_image = binary_picture
+
+        # make random selections for photos up to 90 of wrong people
+        for i in range(30):
+            current_folder_name = np.random.choice(os.listdir(f'{path}'))
+            if current_folder_name != celeb:
+                # Get image from folder and convert into binary
+                image = np.random.choice(os.listdir(f'{path}{current_folder_name}'))
+                image_names.append(image)
+                img = cv2.imread(f'{path}{current_folder_name}/{image}', cv2.IMREAD_GRAYSCALE) # the path of the picture
+                image_array = np.true_divide(img, 255) # converting the array to decimals for input in the neural network
+                binary_picture = image_array.flatten().tolist() # flatten the array for learning
+                images.append(binary_picture)
         
-# Get photos from right person
-for celeb in os.listdir(path):
-    print(celeb)
-    image_names = []
-    isTargets = []
-    images = []
-    input_array = []
+        # check if celebs name = file name
+        for name in image_names:
+            isTargets.append(compareNames(name.partition('!')[0], celeb))
 
-    for i, image in enumerate(os.listdir(f'{path}{celeb}')):
-        img = cv2.imread(f'{path}{celeb}/{image}', cv2.IMREAD_GRAYSCALE) # the path of the picture
-        binary_picture = makeLearning(img)
-        if i != 1:
-            image_names.append(image)
-            images.append(binary_picture)
-        else:
-            target_image = binary_picture
+        # make array for neural network training
+        for image, isTarget in zip(images, isTargets):
+            final_array = isTarget + image + target_image
+            input_array.append(final_array)
 
-    # make random selections for photos up to 90 of wrong people
-    for i in range(20):
-        current_folder_name = np.random.choice(os.listdir(f'{path}'))
-        if current_folder_name != celeb:
-            # Get image from folder and convert into binary
-            image = np.random.choice(os.listdir(f'{path}{current_folder_name}'))
-            image_names.append(image)
-            img = cv2.imread(f'{path}{current_folder_name}/{image}', cv2.IMREAD_GRAYSCALE) # the path of the picture
-            image_array = np.true_divide(img, 255) # converting the array to decimals for input in the neural network
-            binary_picture = image_array.flatten().tolist() # flatten the array for learning
-            images.append(binary_picture)
-    
-    # check if celebs name = file name
-    for name in image_names:
-        isTargets.append(compareNames(name.partition('!')[0], celeb))
-
-    # make array for neural network training
-    for image, isTarget in zip(images, isTargets):
-        final_array = isTarget + image + target_image
-        input_array.append(final_array)
-
-    #print(input_array)
-    # Training neural network
-    for i, array in enumerate(input_array):
-        training(array)
-    
-test()
+        #print(input_array)
+        # Training neural network
+        for i, array in enumerate(input_array):
+            training(array)
+        
+    test()
 
 np.save(f'weights/weights.npy', network.weights)
 np.save(f'weights/bias.npy', network.bias)

@@ -60,13 +60,12 @@ def test():
         for picture in final_list:
             highest_output = 0
             output = network.query(picture)
-            #print(len(output))
-            if output[0] > output[1] + 0.25 and output[0] > highest_output:
+            if output[0] > output[1] and output[0] > highest_output:
                 highest_output = output[0]
                 outputs.append(1)
             else:
                 outputs.append(0)
-        #print('################')
+        print('################')
 
     percentCorrect = (sum(outputs)/len(outputs)) * 100
     print(percentCorrect)

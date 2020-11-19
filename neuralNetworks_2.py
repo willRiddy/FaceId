@@ -64,15 +64,11 @@ class Supervised:
         inputs = np.array(inputs_list, ndmin=2).T
 
         self.outputsList.append(inputs) #adds the input vector into the network
-        i = 0
-        print(len(self.weights))
         for weight, bias in zip(self.weights, self.bias): #feeds through the network
-            print(f'pass {i}')
             inputs = np.dot(weight, inputs) # feed forward
             inputs += bias
             inputs = self.activation_function(inputs) # uses sigmoid function
             self.outputsList.append(inputs)
-            i += 1
         
         self.outputsListAdjusted = self.outputsList[1:]
         final_outputs = inputs #just to clarify
