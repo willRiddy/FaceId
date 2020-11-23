@@ -65,7 +65,6 @@ def test():
                 outputs.append(1)
             else:
                 outputs.append(0)
-        print('################')
 
     percentCorrect = (sum(outputs)/len(outputs)) * 100
     print(percentCorrect)

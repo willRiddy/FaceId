@@ -4,3 +4,5 @@ facesfromPhoto/
 captureFrames/
 Training/Training_Faces
 weights/
+Training/Training_Data
+Training/Testing_Data

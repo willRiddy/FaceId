@@ -5,7 +5,7 @@ path = os.getcwd() # Path to directory
 path = f'{path}/Training/Training_Faces/'
 
 # Getting celebs name from file
-celebs = open('Training/celebs.txt', 'r')
+celebs = open('Training/celebs2.txt', 'r')
 celebs_lines = celebs.readlines()
 # Making folder for each celeb
 for celeb in celebs_lines:

@@ -67,7 +67,7 @@ def test():
     percentCorrect = (sum(outputs)/len(outputs)) * 100
     print(percentCorrect)
 
-epochs = 5
+epochs = 1
 for i in range(epochs):
     # Get photos from right person
     celebList = os.listdir(path)
@@ -88,7 +88,7 @@ for i in range(epochs):
                 target_image = binary_picture
 
         # make random selections for photos up to 90 of wrong people
-        for i in range(30):
+        for i in range(20):
             current_folder_name = np.random.choice(os.listdir(f'{path}'))
             if current_folder_name != celeb:
                 # Get image from folder and convert into binary
@@ -110,6 +110,7 @@ for i in range(epochs):
 
         #print(input_array)
         # Training neural network
+        np.random.shuffle(input_array) # shuffles array to mix elements up
         for i, array in enumerate(input_array):
             training(array)
         
