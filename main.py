@@ -18,7 +18,7 @@ class CheckUnkown():
         self.name = None
         self.currentPhotoPath = None
 
-        self.limit = 0.5 # constant
+        self.limit = 0.54 # constant
         self.highestPrev = 1
 
     # Makes two photos into single concatenated photo
@@ -39,9 +39,10 @@ class CheckUnkown():
     # check for match
     def check_match(self, prediction):
         if prediction <= self.limit:
-            if prediction < self.highestPrev:
+            if prediction <= self.highestPrev:
                 self.highestPrev = prediction
-                self.name = os.path.split(self.currentPhotoPath).partition('.')[0]
+                _, tail = os.path.split(self.currentPhotoPath)
+                self.name = tail.partition('.')[0]
 
     def loopThroughUnknowns(self):
         for photo in os.listdir(self.pathUnkown):
@@ -57,13 +58,15 @@ class CheckUnkown():
     def loopThroughKnowns(self, unimg):
         for i, face in enumerate(os.listdir(self.pathKnown)): # Don't have any known faces yet
             facePath = os.path.join(self.pathKnown, face)
+            self.currentPhotoPath = facePath
             knimg = self.read(facePath)
             connected = self.conPhotos(knimg, unimg)
             prediction = self.query(connected)
-            print(i, prediction)
+            #print(i, prediction)
             self.check_match(prediction)
 
         if self.name is not None:
+            self.highestPrev = 1
             # Update times
             currentTime = time.time()
             print(self.name)
