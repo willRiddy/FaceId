@@ -14,7 +14,7 @@ class faceRecognition():
     def __init__(self, face_cascade):
         self.cap = cv2.VideoCapture(0) # captures from default camera
         self.face_cascade = face_cascade
-        self.dim = (50, 50)
+        self.dim = (100, 100)
 
     def draw_rect(self, obj): # drawing a rectangle around each face
         for (x, y, w, h) in obj:
