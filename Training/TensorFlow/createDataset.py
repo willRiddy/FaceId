@@ -2,12 +2,16 @@ import pandas
 import os
 import numpy as np
 import cv2
+import time
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
 from tensorflow.keras import layers, models
+from tensorflow.keras.callbacks import TensorBoard
 
-DATA = f'{os.getcwd()}\\Training\\Training_Data'
+path = 'C:/Users/willi/Documents/GitHub/FaceId/Training/Training_Data'
+
+DATA = f'{path}'
 CATAGORIES = ['match', 'nomatch']
 
 def createTrainData():
@@ -38,6 +42,10 @@ y = np.array(y)
 
 X = X/255.0
 
+NAME = f'Mode_faces{time.time()}'
+
+tensorboard = TensorBoard(log_dir=f'logs/{NAME}')
+
 model = models.Sequential()
 model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(100, 200, 1)))
 model.add(layers.MaxPooling2D((2, 2)))
@@ -45,9 +53,10 @@ model.add(layers.Conv2D(64, (3, 3), activation='relu'))
 model.add(layers.MaxPooling2D((2, 2)))
 model.add(layers.Conv2D(64, (3, 3), activation='relu'))
 model.add(layers.Flatten())
-model.add(layers.Dense(64))
+model.add(layers.Dense(256, activation='relu'))
 model.add(layers.Dense(1, activation='sigmoid'))
 
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-model.fit(X, y, batch_size=32, validation_split=0.1, epochs=1)
+model.fit(X, y, batch_size=32, validation_split=0.1, epochs=2, callbacks=[tensorboard])
 
+model.save('recognitionCNN.model')

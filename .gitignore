@@ -4,5 +4,7 @@ facesfromPhoto/
 captureFrames/
 Training/Training_Faces
 weights/
+Training/TensorFlow/recognitionCNN.model
+logs/
 Training/Training_Data
 Training/Testing_Data
