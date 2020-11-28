@@ -2,10 +2,10 @@ import os
 import json
 
 path = os.getcwd() # Path to directory
-path = f'{path}/Training/Training_Faces/'
+path = f'Training_Faces/'
 
 # Getting celebs name from file
-celebs = open('Training/celebs2.txt', 'r')
+celebs = open('celebs2.txt', 'r')
 celebs_lines = celebs.readlines()
 # Making folder for each celeb
 for celeb in celebs_lines:
@@ -14,7 +14,7 @@ for celeb in celebs_lines:
     try:
         os.makedirs(f'{path}{celeb}')# Makes folder in current directory with celebs name
     except OSError:
-        print('Error Making directory to {path}')
+        print(f'Error Making directory to {path}')
     else:
         print (f'Directory made in: {path}')
 

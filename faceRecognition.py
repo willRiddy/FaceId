@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 '''
 Not completely my code
@@ -31,11 +32,13 @@ class faceRecognition():
         resized_img = self.resizeImage(crop_img)
         image_array = np.true_divide(resized_img, 255) # converting the array to decimals for input in the neural network
         final_array = image_array.flatten() # flatten the array for learning
-        cv2.imwrite('{0}frame{1}{2}.jpg'.format(path, i, j), resized_img) # writes to a folder so I can run another program at the same time which checks this folder for faces
+        cv2.imwrite('{0}frame{1}{2}.jpg'.format(path, i, j), crop_img) # writes to a folder so I can run another program at the same time which checks this folder for faces
 
     def main(self):
         i = 0
         while True:
+            if i > 1000:
+                i = 0
             ret, self.img = self.cap.read()
             self.gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
             faces = self.face_cascade.detectMultiScale(self.gray, 1.3, 4) # captures all the faces in that frame.

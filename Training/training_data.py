@@ -5,12 +5,13 @@ import os
 import numpy as np
 import cv2
 import sys
+import shutil
 
 class Dataset():
 
     def __init__(self, fileLoc):
-        self.path_in = f'{os.getcwd()}/Training/Training_Faces/'
-        self.path_out = f'{os.getcwd()}/Training/{fileLoc}/'
+        self.path_in = f'Training_Faces/'
+        self.path_out = f'{fileLoc}/'
         self.celebList = os.listdir(self.path_in)
 
     def connect(self, img1, img2):
@@ -37,8 +38,10 @@ class Dataset():
                 image = np.random.choice(os.listdir(f'{self.path_in}{folder}'))
                 img = cv2.imread(f'{self.path_in}{folder}/{image}') # the path of the picture
                 images_notTarget.append(img)
-        
+
+
         # check if celebs name = file name
+
         for i, image in enumerate(images_target):
             try:
                 img = self.connect(target_image, image)

@@ -5,7 +5,8 @@ import os
 class testModel():
 
     def __init__(self, folder, match, limit=0.25):
-        self.path = f'C:/Users/willi/Documents/GitHub/FaceId/Training/Testing_Data/{folder}'
+        
+        self.path = f'C:/Users/willi/OneDrive/Desktop/FaceId/Training/Testing_Data/{folder}'
         self.model = tf.keras.models.load_model('recognitionCNN.model')
         self.match = match
         self.limit = limit
@@ -20,15 +21,15 @@ class testModel():
             
             prediction = self.model.predict([self.imgArray(testPic)])
             if self.match:
-                self.correct(prediction)
+                self.correct(prediction, name)
             else:
-                self.incorrect(prediction)
+                self.incorrect(prediction, name)
 
-    def correct(self, prediction):
+    def correct(self, prediction, name):
         if prediction[0] <= self.limit:
             print(f'{name}, is a match {prediction[0]}')
     
-    def incorrect(self, prediction):
+    def incorrect(self, prediction, name):
         if prediction[0] > self.limit:
             print(f'{name}, is not a match {prediction[0]}')
 

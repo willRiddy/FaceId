@@ -9,9 +9,22 @@ import tensorflow as tf
 from tensorflow.keras import layers, models
 from tensorflow.keras.callbacks import TensorBoard
 
-path = 'C:/Users/willi/Documents/GitHub/FaceId/Training/Training_Data'
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+  # Restrict TensorFlow to only allocate 1GB of memory on the first GPU
+  try:
+      for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
+        logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+        print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Virtual devices must be set before GPUs have been initialized
+    print(e)
 
-DATA = f'{path}'
+
+path = 'C:/Users/willi/OneDrive/Desktop/FaceId/Training'
+
+DATA = f'{path}/Training_Data/'
 CATAGORIES = ['match', 'nomatch']
 
 def createTrainData():
@@ -42,21 +55,32 @@ y = np.array(y)
 
 X = X/255.0
 
-NAME = f'Mode_faces{time.time()}'
+dense_layers = [1]
+layer_sizes = [256]
+conv_layers = [3]
 
-tensorboard = TensorBoard(log_dir=f'logs/{NAME}')
+for denseLayer in dense_layers:
+    for layerSize in layer_sizes:
+        for convLayer in conv_layers:
+            NAME = f'{convLayer}-conv-{layerSize}-nodes-{denseLayer}-dense-{time.time()}'
+            tensorboard = TensorBoard(log_dir=f'logs/{NAME}')
 
-model = models.Sequential()
-model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(100, 200, 1)))
-model.add(layers.MaxPooling2D((2, 2)))
-model.add(layers.Conv2D(64, (3, 3), activation='relu'))
-model.add(layers.MaxPooling2D((2, 2)))
-model.add(layers.Conv2D(64, (3, 3), activation='relu'))
-model.add(layers.Flatten())
-model.add(layers.Dense(256, activation='relu'))
-model.add(layers.Dense(1, activation='sigmoid'))
+            model = models.Sequential()
+            model.add(layers.Conv2D(layerSize, (3, 3), activation='relu', input_shape=(100, 200, 1)))
+            model.add(layers.MaxPooling2D((2, 2)))
 
-model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-model.fit(X, y, batch_size=32, validation_split=0.1, epochs=2, callbacks=[tensorboard])
+            for l in range(convLayer - 1):
+                model.add(layers.Conv2D(layerSize, (3, 3), activation='relu'))
+                model.add(layers.MaxPooling2D((2, 2)))
+
+            model.add(layers.Flatten())
+            for i in range(denseLayer):
+                model.add(layers.Dense(layerSize, activation='relu'))
+
+            model.add(layers.Dense(1, activation='sigmoid'))
+
+            model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+            model.fit(X, y, batch_size=32, validation_split=0.1, epochs=10, callbacks=[tensorboard])
+
 
 model.save('recognitionCNN.model')
