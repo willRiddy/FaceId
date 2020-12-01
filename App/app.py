@@ -13,6 +13,70 @@ mydb = mysql.connector.connect(
 mycursor = mydb.cursor()
 knownFacesPath = 'C:\\Users\\willi\\Documents\\GitHub\\FaceID\\knownFaces\\'
 
+class Delete(wx.Frame):
+
+    def __init__(self, parent):
+        super(Delete, self).__init__(parent)
+        self.parent = parent
+        self.dict = {}
+        self.Centre()
+        self.SetTitle('Delete User')
+
+        self.InitUI()
+
+    def InitUI(self):
+        self.createDict()
+        users = self.fetchUsers()
+        self.panel = wx.Panel(self)
+        checkboxes = []
+        for i, (ID, name) in enumerate(users):
+            pos=(10, (i*40)+30)
+            label = wx.StaticText(self.panel, label=name, pos=(10, (i*40)+10))
+            chbox = wx.CheckBox(self.panel, label=str(ID), pos=pos)
+            checkboxes.append(chbox)
+        
+        enterButton = wx.Button(self.panel, label='Delete selected', pos = (250, 375))
+        enterButton.Bind(wx.EVT_BUTTON, self.onButton)        
+
+        self.Bind(wx.EVT_CHECKBOX, self.onChecked)
+
+    def onButton(self, e):
+        for pupils in self.dict:
+            pupil = self.dict[pupils]
+            if pupil['status']:
+                ID = pupil['id']
+                self.deleteUser(ID)
+        self.Hide()
+
+    def onChecked(self, e):
+        cb = e.GetEventObject()
+        self.dict[cb.GetLabel()]['status'] = cb.GetValue()
+        print(self.dict[cb.GetLabel()]['status'])
+        #print(cb.GetLabel(),' is clicked',cb.GetValue())
+
+    def deleteUser(self, user):
+        sql = f"DELETE FROM pupils WHERE pupilID={user}"
+        mycursor.execute(sql)
+        mydb.commit()
+
+    def fetchUsers(self):
+        sql = "SELECT pupilID, name FROM pupils"
+        mycursor.execute(sql)
+        results = mycursor.fetchall()
+        return results
+
+    def createDict(self):
+        users = self.fetchUsers()
+        for ID, name in users:
+            self.dict[str(ID)] = {'id':ID,
+                            'name':name,
+                            'status':False}
+
+    def main(self):
+        self.Show()
+
+    
+
 class CapturePanel(wx.Frame):
 
     def __init__(self, parent):
@@ -85,30 +149,41 @@ class MainUI(wx.Frame):
 
     def __init__(self, parent, title):
         super(MainUI, self).__init__(parent, title=title)
+        
+        self.capturePanel = CapturePanel(self)
+        self.deletePanel = Delete(self)
 
         self.InitUI()
 
     def InitUI(self):
-
-        self.capturePanel = CapturePanel(self)
-
         menubar = wx.MenuBar()
 
         fileMenu = wx.Menu()
         menuQuit = fileMenu.Append(wx.ID_EXIT, 'Quit', 'Quit application')
         menuCamera = fileMenu.Append(wx.ID_ANY, 'Camera', 'Open Camera')
+        menuDelete = fileMenu.Append(wx.ID_ANY, 'Delete', 'Delete User')
 
         menubar.Append(fileMenu, '&File')
         self.SetMenuBar(menubar)
 
         self.Bind(wx.EVT_MENU, self.OnQuit, menuQuit)
         self.Bind(wx.EVT_MENU, self.OnCamera, menuCamera)
+        self.Bind(wx.EVT_MENU, self.OnDelete, menuDelete)
+
+    def main(self):
+        self.InitUI()
+        self.Show()
 
     def OnQuit(self, e):
         self.Close()
 
     def OnCamera(self, e):
+        self.capturePanel = CapturePanel(self)
         self.capturePanel.main()
+    
+    def OnDelete(self, e):
+        self.deletePanel = Delete(self)
+        self.deletePanel.main()
 
 
 
@@ -116,7 +191,7 @@ def main():
 
     app = wx.App()
     UI = MainUI(None, title='Face Recognition Registration')
-    UI.Show()
+    UI.main()
     app.MainLoop()
 
 if __name__ =='__main__':

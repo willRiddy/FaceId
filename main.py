@@ -71,13 +71,14 @@ class CheckUnkown():
         return img_array
 
     def update(self, ID):
-        sql = f"UPDATE pupils SET time = now(), cameraID = 2 WHERE puilsID='{ID}'"
+        sql = f"UPDATE pupils SET time = now(), cameraID = 2 WHERE pupilID={ID}"
         self.db.cursor.execute(sql)
         self.db.db.commit()
 
     def loopThroughUnknowns(self):
         for photo in os.listdir(self.pathUnkown):
             photoPath = os.path.join(self.pathUnkown, photo)
+            print(photoPath)
             if photoPath is None: # bug where there is an image file but no image in it
                 break
             prediction = self.useFR(photoPath)
@@ -86,6 +87,7 @@ class CheckUnkown():
                 print('Update', self.ID)
                 self.update(self.ID)
             os.remove(photoPath)
+        time.sleep(0.1) # Going through images too fast, had to slow down.
 
     def useFR(self, unknown):
         unknown_image = face_recognition.load_image_file(unknown)
@@ -95,7 +97,7 @@ class CheckUnkown():
             return None
 
         results = face_recognition.face_distance(self.known, unknown_encoding)
-        result = self.knownNames[np.argmin(results)]
+        result = self.knownID[np.argmin(results)]
 
         return result
 
