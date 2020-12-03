@@ -78,7 +78,6 @@ class CheckUnkown():
     def loopThroughUnknowns(self):
         for photo in os.listdir(self.pathUnkown):
             photoPath = os.path.join(self.pathUnkown, photo)
-            print(photoPath)
             if photoPath is None: # bug where there is an image file but no image in it
                 break
             prediction = self.useFR(photoPath)

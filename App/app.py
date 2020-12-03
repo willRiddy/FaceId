@@ -1,6 +1,7 @@
 import wx
 import cv2
 import shutil
+import os
 import mysql.connector
 
 mydb = mysql.connector.connect(
@@ -12,6 +13,91 @@ mydb = mysql.connector.connect(
 
 mycursor = mydb.cursor()
 knownFacesPath = 'C:\\Users\\willi\\Documents\\GitHub\\FaceID\\knownFaces\\'
+
+class MyFileDropTarget(wx.FileDropTarget):
+
+    def __init__(self, window):
+
+        wx.FileDropTarget.__init__(self)
+        self.window = window
+        self.path = None
+
+    def OnDropFiles(self, x, y, filenames):
+
+        self.window.SetInsertionPointEnd()
+        self.window.updateText(f"{len(filenames)} file(s) dropped at {x},{y}:\n")
+        self.path = filenames
+        for filepath in filenames:
+            self.window.updateText(filepath + '\n')  
+
+        return True 
+
+class MultiEnter(wx.Frame):
+
+    def __init__(self, parent):
+        super(MultiEnter, self).__init__(parent)
+        self.parent = parent
+        self.Centre()
+        self.SetTitle('Enter Users')
+        self.InitUI()
+
+    def InitUI(self):
+        self.panel = wx.Panel(self)
+
+        self.FileDropTarget = MyFileDropTarget(self)
+
+        lbl = wx.StaticText(self.panel, label="Drag some files here:")
+        self.fileTextCtrl = wx.TextCtrl(self.panel,
+                                        style=wx.TE_MULTILINE|wx.HSCROLL|wx.TE_READONLY)
+        self.fileTextCtrl.SetDropTarget(self.FileDropTarget)
+
+        enterButton = wx.Button(self.panel, label='Enter Users', pos=(275, 5))
+        enterButton.Bind(wx.EVT_BUTTON, self.onButton)
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(lbl, 0, wx.ALL, 5)
+        sizer.Add(self.fileTextCtrl, 1, wx.EXPAND|wx.ALL, 5)
+        self.panel.SetSizer(sizer)
+
+    def SetInsertionPointEnd(self):
+        self.fileTextCtrl.SetInsertionPointEnd()
+
+    def updateText(self, text):
+        self.fileTextCtrl.WriteText(text)
+
+    def enterUser(self, name, photo):
+        sql = f"INSERT INTO pupils (name, photo) VALUES (%s, %s)" # sql to insert new user
+        val = (name, photo)
+        mycursor.execute(sql, val)
+        mydb.commit()
+
+    def getName(self, path, name):
+        text = wx.TextEntryDialog(self.parent, f'Please enter full name for {name}:', 'Enter here...')
+        text.ShowModal()
+        name = text.GetValue()
+        shutil.move(path, f'{knownFacesPath}{name}.jpg')
+        return name
+
+
+    def enter(self):
+        paths = self.FileDropTarget.path
+        for path in paths:
+            for photo in os.listdir(path):
+                if photo.split('.')[-1] == 'jpg':
+                    fullPath = os.path.join(path, photo)
+                    name = self.getName(fullPath, photo)
+                    self.enterUser(name, fullPath)
+                else:
+                    print(f'{photo} is not a jpg.')
+
+
+    def onButton(self, e):
+        self.enter()
+        self.Close()
+
+    def main(self):
+        self.Show()
+
 
 class Delete(wx.Frame):
 
@@ -52,7 +138,6 @@ class Delete(wx.Frame):
         cb = e.GetEventObject()
         self.dict[cb.GetLabel()]['status'] = cb.GetValue()
         print(self.dict[cb.GetLabel()]['status'])
-        #print(cb.GetLabel(),' is clicked',cb.GetValue())
 
     def deleteUser(self, user):
         sql = f"DELETE FROM pupils WHERE pupilID={user}"
@@ -152,6 +237,7 @@ class MainUI(wx.Frame):
         
         self.capturePanel = CapturePanel(self)
         self.deletePanel = Delete(self)
+        self.multiPanel = MultiEnter(self)
 
         self.InitUI()
 
@@ -162,6 +248,7 @@ class MainUI(wx.Frame):
         menuQuit = fileMenu.Append(wx.ID_EXIT, 'Quit', 'Quit application')
         menuCamera = fileMenu.Append(wx.ID_ANY, 'Camera', 'Open Camera')
         menuDelete = fileMenu.Append(wx.ID_ANY, 'Delete', 'Delete User')
+        menuMulti = fileMenu.Append(wx.ID_ANY, 'Multi-Enter', 'Enter multiple users')
 
         menubar.Append(fileMenu, '&File')
         self.SetMenuBar(menubar)
@@ -169,10 +256,16 @@ class MainUI(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnQuit, menuQuit)
         self.Bind(wx.EVT_MENU, self.OnCamera, menuCamera)
         self.Bind(wx.EVT_MENU, self.OnDelete, menuDelete)
+        self.Bind(wx.EVT_MENU, self.onMulti, menuMulti)
 
     def main(self):
         self.InitUI()
         self.Show()
+
+    def onMulti(self, e):
+        self.multiPanel = MultiEnter(self)
+        self.multiPanel.main()
+
 
     def OnQuit(self, e):
         self.Close()
