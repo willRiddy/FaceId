@@ -5,6 +5,7 @@ import os
 from datetime import datetime, date
 import mysql.connector
 
+# connector to database
 mydb = mysql.connector.connect(
     host='localhost',
     user='will',
@@ -20,11 +21,11 @@ class MyFileDropTarget(wx.FileDropTarget):
 
     def __init__(self, window):
 
-        wx.FileDropTarget.__init__(self)
+        wx.FileDropTarget.__init__(self) # uses file drop target for file drag and drop.
         self.window = window
         self.path = None
 
-    def OnDropFiles(self, x, y, filenames):
+    def OnDropFiles(self, x, y, filenames): # return filenames
 
         self.window.SetInsertionPointEnd()
         self.window.updateText(f"{len(filenames)} file(s) dropped at {x},{y}:\n")
@@ -45,7 +46,7 @@ class MultiEnter(wx.Frame):
         self.InitUI()
 
     def InitUI(self):
-        self.panel = wx.Panel(self)
+        self.panel = wx.Panel(self) # initialises all functions needed
 
         self.FileDropTarget = MyFileDropTarget(self)
 
@@ -78,15 +79,15 @@ class MultiEnter(wx.Frame):
         text = wx.TextEntryDialog(self.parent, f'Please enter full name for {name}:', 'Enter here...')
         text.ShowModal()
         name = text.GetValue()
-        shutil.move(path, f'{knownFacesPath}{name}.jpg')
+        shutil.move(path, f'{knownFacesPath}{name}.jpg') # moves picture to known images folder
         return name
 
 
     def enter(self):
         paths = self.FileDropTarget.path
         for path in paths:
-            for photo in os.listdir(path):
-                if photo.split('.')[-1] == 'jpg':
+            for photo in os.listdir(path): # move and enter each image individually
+                if photo.split('.')[-1] == 'jpg': # checks if the photo ends in jpg
                     fullPath = os.path.join(path, photo)
                     name = self.getName(fullPath, photo)
                     self.enterUser(name, fullPath)
@@ -120,7 +121,7 @@ class Delete(wx.Frame):
         checkboxes = []
         for i, (ID, name) in enumerate(users):
             pos=(10, (i*40)+30)
-            label = wx.StaticText(self.panel, label=name, pos=(10, (i*40)+10))
+            label = wx.StaticText(self.panel, label=name, pos=(10, (i*40)+10)) # generates position equally spaced apart
             chbox = wx.CheckBox(self.panel, label=str(ID), pos=pos)
             checkboxes.append(chbox)
         
@@ -129,7 +130,7 @@ class Delete(wx.Frame):
 
         self.Bind(wx.EVT_CHECKBOX, self.onChecked)
 
-    def onButton(self, e):
+    def onButton(self, e): # once all have been selected delete selected from db
         for pupils in self.dict:
             pupil = self.dict[pupils]
             if pupil['status']:
@@ -140,7 +141,6 @@ class Delete(wx.Frame):
     def onChecked(self, e):
         cb = e.GetEventObject()
         self.dict[cb.GetLabel()]['status'] = cb.GetValue()
-        print(self.dict[cb.GetLabel()]['status'])
 
     def deleteUser(self, user):
         sql = f"DELETE FROM pupils WHERE pupilID={user}"
@@ -153,7 +153,7 @@ class Delete(wx.Frame):
         results = mycursor.fetchall()
         return results
 
-    def createDict(self):
+    def createDict(self): # using a dictionary to store pupil name and id
         users = self.fetchUsers()
         for ID, name in users:
             self.dict[str(ID)] = {'id':ID,
@@ -163,7 +163,7 @@ class Delete(wx.Frame):
     def main(self):
         self.Show()
     
-
+# Class for camera / uploading a single image
 class CapturePanel(wx.Frame):
 
     def __init__(self, parent):
@@ -198,13 +198,13 @@ Press the cross to exit and re-enter info""", pos=(650, 50))
 
     def main(self):
         self.Show()
-        text = wx.TextEntryDialog(self.parent, 'Please enter full name: ', 'Enter here...')
+        text = wx.TextEntryDialog(self.parent, 'Please enter full name: ', 'Enter here...') # pop up box for name entry
         text.ShowModal()
         self.result = text.GetValue()
-        text.Destroy()
+        text.Destroy() # after getting name, destroy pop up
         cap = cv2.VideoCapture(0)
 
-        while(cap.isOpened()):
+        while(cap.isOpened()): # using opencv to capture imgage
             ret, frame = cap.read()
 
             cv2.imshow('frame', frame)
@@ -218,7 +218,7 @@ Press the cross to exit and re-enter info""", pos=(650, 50))
         cv2.destroyAllWindows()
         self.updateBackground()
 
-    def updateBackground(self):
+    def updateBackground(self): # put the capture image in the background so you can see the image you captured
         try:
             # pick an image file you have in the working folder
             image_file = 'imgCache/frame.jpg'
@@ -251,6 +251,7 @@ class MainUI(wx.Frame):
 
         menubar = wx.MenuBar()
 
+        # all the file menu buttons
         fileMenu = wx.Menu()
         menuQuit = fileMenu.Append(wx.ID_EXIT, 'Quit', 'Quit application')
         menuCamera = fileMenu.Append(wx.ID_ANY, 'Camera', 'Open Camera')
@@ -265,13 +266,19 @@ class MainUI(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnDelete, menuDelete)
         self.Bind(wx.EVT_MENU, self.onMulti, menuMulti)
 
+        # search bar to search for users
         self.search = wx.TextCtrl(self.panel, value='Enter Name...', style=wx.TE_PROCESS_ENTER)
         searchTest = wx.StaticText(self.panel, label='Press enter to search...', pos = (115, 5))
         self.Bind(wx.EVT_TEXT_ENTER, self.OnSearch, self.search)
+        self.refresh = wx.Button(self.panel, label='Refresh', pos=(300, 5))
+        self.Bind(wx.EVT_BUTTON, self.OnRefresh, self.refresh)
 
         headerName = wx.StaticText(self.panel, label='Name', pos=(10, 30))
         headerPresent = wx.StaticText(self.panel, label='Present', pos=(150, 30))
 
+        self.printNames()
+
+    def OnRefresh(self, e):
         self.printNames()
 
     def OnPressButton(self, e):
@@ -280,17 +287,18 @@ class MainUI(wx.Frame):
         pass
 
     def OnSearch(self, e):
-        self.searchValue = self.search.GetValue()
+        self.searchValue = self.search.GetValue() # get value of whats in search bar
         sql = f'SELECT pupilID, name, present FROM pupils WHERE name LIKE "%{self.searchValue}%"'
         mycursor.execute(sql)
         names = mycursor.fetchall()
         self.printNames(names)
 
+
+    # printing names so that you can see who you have searched for
     def printNames(self, names=None):
         for value in self.nameList:
             value[0].Destroy() # Deletes all names and buttons
             value[1].Destroy()
-            #self.nameList.remove(name)
 
         self.nameList = [] # Resets the list so that deleted text is not in the list
 
@@ -302,7 +310,7 @@ class MainUI(wx.Frame):
         for i, (ID, name, present) in enumerate(names):
             y = (i*20)+50
             nameStr = wx.StaticText(self.panel, label=name, pos=(10, y))
-            presentBox = wx.CheckBox(self.panel, label=str(ID), pos=(150, y)) # button to make pupils present if they havn't been recognised
+            presentBox = wx.CheckBox(self.panel, label=str(ID), pos=(150, y)) # checkbox to make pupils present if they havn't been recognised
             if present == 1:
                 presentBox.SetValue(True)
             self.Bind(wx.EVT_CHECKBOX, self.OnChecked) # when the checkbox is clicked change the status of the pupil
@@ -337,7 +345,8 @@ class MainUI(wx.Frame):
 
 currentCam = 2
 
-# function to work out if the pupil present
+# function to work out if the pupil present 
+#just a placeholder function at the moment
 def isPresent():
     sql = "SELECT pupilID, time, cameraID FROM pupils"
     mycursor.execute(sql)
@@ -355,10 +364,9 @@ def isPresent():
                     mycursor.execute(sql)
                     mydb.commit()
                 else: # change present to false
-                    sql = f"UPDATE pupils SET present = True WHERE pupilID = {ID}"
+                    sql = f"UPDATE pupils SET present = False WHERE pupilID = {ID}"
                     mycursor.execute(sql)
                     mydb.commit()
-
 
 
 isPresent()
