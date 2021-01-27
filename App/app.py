@@ -376,10 +376,15 @@ def isPresent():
     for (ID, timeDat, camera) in pupils:
         print(timeDat)
         if register.isPresent(timeDat):
+            print('True')
             sql = f"UPDATE pupils SET present = True WHERE pupilID = {ID}"
             mycursor.execute(sql)
             mydb.commit()
         else:
+            sql = f"UPDATE pupils SET present = False WHERE pupilID = {ID}"
+            mycursor.execute(sql)
+            mydb.commit()
+        if register.lessonEnded():
             sql = f"UPDATE pupils SET present = False WHERE pupilID = {ID}"
             mycursor.execute(sql)
             mydb.commit()
@@ -391,6 +396,7 @@ class Registration:
         self.currentTime = None
         self.pupilTime = None
         self.lessonNum = len(timetable)
+        self.currentLesson = 0
     
     # get current time
     def getTime(self, pTime):
@@ -412,25 +418,29 @@ class Registration:
         for i, time in enumerate(self.timetable):
             time1 = self.convertStrTime(self.timetable[time][0])
             time2 = self.convertStrTime(self.timetable[time][1])
-            if self.timeSlot([time1, time2], i):
-                return True
+            print(time1, time2)
+            if self.timeSlot([time1, time2], i): # Is the time within the timetable slot
+                if self.pupilTime >= time1 and self.pupilTime <= time2: # is the pupil within the time
+                    return True
+                else:
+                    return False
 
     # finds the current lesson
     def timeSlot(self, timeRange, i):
         if self.currentTime >= timeRange[0] and self.currentTime <= timeRange[1]:
-            print(timedelta(seconds=self.currentTime))
+            print(self.currentTime)
             self.currentLesson = i
             return True
 
     # has the lesson ended?
     def lessonEnded(self): # checks if the current time is greater than the lesson
-        if self.currentTime > self.convertStrTime(self.timetable[self.lessonNum][1]):
+        if self.currentTime > self.convertStrTime(self.timetable[self.currentLesson][1]):
             self.currentLesson += 1
             return True
         
 
 
-timetable = {"time1":["09:00","10:00"],"time2":["10:00","11:00"],"time3":["11:00", "12:00"],"time4":["15:00", "16:00"],"time5":["18:00", "19:00"]} 
+timetable = {0:["09:00","10:00"],1:["10:00","11:00"],2:["11:00", "12:00"],3:["15:00", "16:00"],4:["18:00", "19:00"]} 
 register = Registration(timetable)
 
 isPresent()
