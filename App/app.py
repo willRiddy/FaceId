@@ -2,7 +2,7 @@ import wx
 import cv2
 import shutil
 import os
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import mysql.connector
 
 # connector to database
@@ -279,6 +279,7 @@ class MainUI(wx.Frame):
         self.printNames()
 
     def OnRefresh(self, e):
+        isPresent() # checking for present pupil's function
         self.printNames()
 
     def OnPressButton(self, e):
@@ -317,7 +318,6 @@ class MainUI(wx.Frame):
             self.nameList.append([nameStr, presentBox])
 
     def main(self):
-        isPresent() # checking for present pupil's function
         self.Show()
 
     def OnChecked(self, e):
@@ -347,7 +347,7 @@ currentCam = 2
 
 # function to work out if the pupil present 
 #just a placeholder function at the moment
-def isPresent():
+def isPresent2():
     sql = "SELECT pupilID, time, cameraID FROM pupils"
     mycursor.execute(sql)
     pupils = mycursor.fetchall()
@@ -355,6 +355,7 @@ def isPresent():
         if camera == currentCam:
             if timeDat is not None:
                 convertedtimeDat = timeDat.total_seconds()
+                print(convertedtimeDat)
                 currenttime = datetime.now().time()
                 convertedtime = (datetime.combine(date.min, currenttime) - datetime.min).total_seconds()
                 timeDifference = convertedtimeDat - convertedtime
@@ -368,6 +369,69 @@ def isPresent():
                     mycursor.execute(sql)
                     mydb.commit()
 
+def isPresent():
+    sql = "SELECT pupilID, time, cameraID FROM pupils"
+    mycursor.execute(sql)
+    pupils = mycursor.fetchall()
+    for (ID, timeDat, camera) in pupils:
+        print(timeDat)
+        if register.isPresent(timeDat):
+            sql = f"UPDATE pupils SET present = True WHERE pupilID = {ID}"
+            mycursor.execute(sql)
+            mydb.commit()
+        else:
+            sql = f"UPDATE pupils SET present = False WHERE pupilID = {ID}"
+            mycursor.execute(sql)
+            mydb.commit()
+
+class Registration:
+    
+    def __init__(self, timetable):
+        self.timetable = timetable
+        self.currentTime = None
+        self.pupilTime = None
+        self.lessonNum = len(timetable)
+    
+    # get current time
+    def getTime(self, pTime):
+        self.currentTime = datetime.now().time()
+        # converts current time to seconds
+        self.currentTime = (datetime.combine(date.min, self.currentTime) - datetime.min).total_seconds()
+        self.pupilTime = pTime.total_seconds()
+
+    # converts from string time into seconds
+    def convertStrTime(self, time):
+        date_time = datetime.strptime(time, '%H:%M')
+        timedelta = date_time - datetime(1900, 1, 1)
+        seconds = timedelta.total_seconds()
+        return seconds
+
+    # find timetable slot
+    def isPresent(self, pTime):
+        self.getTime(pTime)
+        for i, time in enumerate(self.timetable):
+            time1 = self.convertStrTime(self.timetable[time][0])
+            time2 = self.convertStrTime(self.timetable[time][1])
+            if self.timeSlot([time1, time2], i):
+                return True
+
+    # finds the current lesson
+    def timeSlot(self, timeRange, i):
+        if self.currentTime >= timeRange[0] and self.currentTime <= timeRange[1]:
+            print(timedelta(seconds=self.currentTime))
+            self.currentLesson = i
+            return True
+
+    # has the lesson ended?
+    def lessonEnded(self): # checks if the current time is greater than the lesson
+        if self.currentTime > self.convertStrTime(self.timetable[self.lessonNum][1]):
+            self.currentLesson += 1
+            return True
+        
+
+
+timetable = {"time1":["09:00","10:00"],"time2":["10:00","11:00"],"time3":["11:00", "12:00"],"time4":["15:00", "16:00"],"time5":["18:00", "19:00"]} 
+register = Registration(timetable)
 
 isPresent()
 def main():
