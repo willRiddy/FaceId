@@ -324,7 +324,7 @@ class MainUI(wx.Frame):
         box = e.GetEventObject()
         ID = box.GetLabel() # gets the ID of the pupil which is the label of the checkbox
         present = box.GetValue() # gets the value of the checkbox
-        sql = f"UPDATE pupils SET present = {present} WHERE pupilID = {ID}"
+        sql = f"UPDATE pupils SET present = {present}, override = {present} WHERE pupilID = {ID}"
         mycursor.execute(sql)
         mydb.commit()
 
@@ -370,12 +370,12 @@ def isPresent2():
                     mydb.commit()
 
 def isPresent():
-    sql = "SELECT pupilID, time, cameraID FROM pupils"
+    sql = "SELECT pupilID, time, cameraID, override FROM pupils"
     mycursor.execute(sql)
     pupils = mycursor.fetchall()
-    for (ID, timeDat, camera) in pupils:
-        print(timeDat)
-        if register.isPresent(timeDat):
+    for (ID, timeDat, camera, override) in pupils:
+        print(override)
+        if register.isPresent(timeDat) or override:
             print('True')
             sql = f"UPDATE pupils SET present = True WHERE pupilID = {ID}"
             mycursor.execute(sql)
@@ -385,7 +385,7 @@ def isPresent():
             mycursor.execute(sql)
             mydb.commit()
         if register.lessonEnded():
-            sql = f"UPDATE pupils SET present = False WHERE pupilID = {ID}"
+            sql = f"UPDATE pupils SET present = False, override = False WHERE pupilID = {ID}"
             mycursor.execute(sql)
             mydb.commit()
 
