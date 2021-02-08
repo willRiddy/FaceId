@@ -1,4 +1,5 @@
 import wx
+import wx.grid
 import cv2
 import shutil
 import os
@@ -162,7 +163,44 @@ class Delete(wx.Frame):
 
     def main(self):
         self.Show()
-    
+
+class Timetable(wx.Frame):
+
+    def __init__(self, parent):
+        super(Timetable, self).__init__(parent)
+        self.parent = parent
+
+        self.Centre()
+        self.SetTitle('Timetable')
+        self.panel = wx.Panel(self)
+        self.InitUI()
+
+    def InitUI(self):
+        for i in range(10):
+            for j in range(2):
+                if i == 0:
+                    if j == 0:
+                        wx.StaticText(self.panel, label='Start', pos=(10+(j*110), 10+(i*25)))
+                    elif j == 1:
+                        wx.StaticText(self.panel, label='End', pos=(10+(j*110), 10+(i*25)))
+                else:
+                    wx.TextCtrl(self.panel, value='enter time', pos=(10+(j*110), 10+(i*25)))
+        print(self.getTimetable())
+        enterButton = wx.Button(self.panel, label='Delete selected', pos = (250, 375))
+        enterButton.Bind(wx.EVT_BUTTON, self.onButton)
+
+    def getTimetable(self):
+        sql = 'SELECT timeStart, timeEnd FROM timetable'
+        mycursor.execute(sql)
+        timetable = mycursor.fetchall()
+        return timetable
+  
+    def onButton(self, e):
+        pass
+
+    def main(self):
+        self.Show()
+
 # Class for camera / uploading a single image
 class CapturePanel(wx.Frame):
 
@@ -257,6 +295,7 @@ class MainUI(wx.Frame):
         menuCamera = fileMenu.Append(wx.ID_ANY, 'Camera', 'Open Camera')
         menuDelete = fileMenu.Append(wx.ID_ANY, 'Delete', 'Delete User')
         menuMulti = fileMenu.Append(wx.ID_ANY, 'Multi-Enter', 'Enter multiple users')
+        menuTimetable = fileMenu.Append(wx.ID_ANY, 'Timetable', 'Change the timetable')
 
         menubar.Append(fileMenu, '&File')
         self.SetMenuBar(menubar)
@@ -264,7 +303,8 @@ class MainUI(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnQuit, menuQuit)
         self.Bind(wx.EVT_MENU, self.OnCamera, menuCamera)
         self.Bind(wx.EVT_MENU, self.OnDelete, menuDelete)
-        self.Bind(wx.EVT_MENU, self.onMulti, menuMulti)
+        self.Bind(wx.EVT_MENU, self.OnMulti, menuMulti)
+        self.Bind(wx.EVT_MENU, self.OnTimetable, menuTimetable)
 
         # search bar to search for users
         self.search = wx.TextCtrl(self.panel, value='Enter Name...', style=wx.TE_PROCESS_ENTER)
@@ -328,7 +368,7 @@ class MainUI(wx.Frame):
         mycursor.execute(sql)
         mydb.commit()
 
-    def onMulti(self, e):
+    def OnMulti(self, e):
         self.multiPanel = MultiEnter(self)
         self.multiPanel.main()
 
@@ -342,6 +382,10 @@ class MainUI(wx.Frame):
     def OnDelete(self, e):
         self.deletePanel = Delete(self)
         self.deletePanel.main()
+
+    def OnTimetable(self, e):
+        self.timetablePanel = Timetable(self)
+        self.timetablePanel.main()
 
 currentCam = 2
 
@@ -385,6 +429,7 @@ def isPresent():
             mycursor.execute(sql)
             mydb.commit()
         if register.lessonEnded():
+            print('Lesson Ended')
             sql = f"UPDATE pupils SET present = False, override = False WHERE pupilID = {ID}"
             mycursor.execute(sql)
             mydb.commit()
@@ -418,7 +463,6 @@ class Registration:
         for i, time in enumerate(self.timetable):
             time1 = self.convertStrTime(self.timetable[time][0])
             time2 = self.convertStrTime(self.timetable[time][1])
-            print(time1, time2)
             if self.timeSlot([time1, time2], i): # Is the time within the timetable slot
                 if self.pupilTime >= time1 and self.pupilTime <= time2: # is the pupil within the time
                     return True
@@ -428,7 +472,6 @@ class Registration:
     # finds the current lesson
     def timeSlot(self, timeRange, i):
         if self.currentTime >= timeRange[0] and self.currentTime <= timeRange[1]:
-            print(self.currentTime)
             self.currentLesson = i
             return True
 

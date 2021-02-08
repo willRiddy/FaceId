@@ -16,5 +16,9 @@ mycursor = mydb.cursor()
 # mycursor.execute("CREATE TABLE pupils (pupilID INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), photo VARCHAR(255), cameraID INT, time TIME)")
 # create camera table
 # mycursor.execute("CREATE TABLE cameras (cameraID INT AUTO_INCREMENT PRIMARY KEY, location VARCHAR(255))")
-mycursor.execute("ALTER TABLE pupils RENAME COLUMN overide TO override")
+# create timtable table
+# mycursor.execute("CREATE TABLE timetable (periodID INT AUTO_INCREMENT PRIMARY KEY, timeStart Time, timeEnd Time)")
+
+
+#mycursor.execute("ALTER TABLE pupils RENAME COLUMN overide TO override")
 mydb.commit()

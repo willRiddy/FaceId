@@ -45,7 +45,7 @@ class CheckUnkown():
         self.knownNames = []
 
     def encodeKnown(self):
-        sql = self.db.query('pupilID, name, photo', 'pupils')
+        sql = self.db.query('pupilID, name, photo, override', 'pupils')
         self.db.cursor.execute(sql)
         results = self.db.cursor.fetchall()
         for ID, name, photo in results:
@@ -71,7 +71,7 @@ class CheckUnkown():
         return img_array
 
     def update(self, ID):
-        sql = f"UPDATE pupils SET time = now(), cameraID = 2 WHERE pupilID={ID}"
+        sql = f"UPDATE pupils SET time = now(), cameraID = 2, override = False WHERE pupilID={ID}"
         self.db.cursor.execute(sql)
         self.db.db.commit()
 
