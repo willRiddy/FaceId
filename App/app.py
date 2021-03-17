@@ -184,7 +184,7 @@ class Timetable(wx.Frame):
                     elif j == 1:
                         wx.StaticText(self.panel, label='End', pos=(10+(j*110), 10+(i*25)))
                 else:
-                    wx.TextCtrl(self.panel, value='enter time', pos=(10+(j*110), 10+(i*25)))
+                    wx.TextCtrl(self.panel, value='Under Development', pos=(10+(j*110), 10+(i*25)))
         print(self.getTimetable())
         enterButton = wx.Button(self.panel, label='Delete selected', pos = (250, 375))
         enterButton.Bind(wx.EVT_BUTTON, self.onButton)
@@ -221,7 +221,7 @@ class CapturePanel(wx.Frame):
     def OnClick(self, e):
         name = self.result
         re = self.result.replace(' ', '_')
-        shutil.move('imgCache\\frame.jpg', f'{knownFacesPath}{re}.jpg') # move captured frame into final destination
+        shutil.move('C:\\Users\\willi\\Documents\\GitHub\\FaceId\\App\\imgCache\\frame.jpg', f'{knownFacesPath}{re}.jpg') # move captured frame into final destination
         sql = f"INSERT INTO pupils (name, photo) VALUES (%s, %s)" # sql to insert new user
         val = (name, f'{knownFacesPath}{re}.jpg')
         mycursor.execute(sql, val) # run sql
@@ -248,8 +248,8 @@ Press the cross to exit and re-enter info""", pos=(650, 50))
             cv2.imshow('frame', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-            elif cv2.waitKey(32) & 0xFF == ord(' '):
-                cv2.imwrite('imgCache/frame.jpg', frame)
+            elif cv2.waitKey(32) & 0xFF == ord(' '):                
+                cv2.imwrite('C:\\Users\\willi\\Documents\\GitHub\\FaceId\\App\\imgCache\\frame.jpg', frame)
                 break
 
         cap.release()
@@ -259,7 +259,7 @@ Press the cross to exit and re-enter info""", pos=(650, 50))
     def updateBackground(self): # put the capture image in the background so you can see the image you captured
         try:
             # pick an image file you have in the working folder
-            image_file = 'imgCache/frame.jpg'
+            image_file = 'C:\\Users\\willi\\Documents\\GitHub\\FaceId\\App\\imgCache\\frame.jpg'
             bmp1 = wx.Image(image_file, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
             # image's upper left corner anchors at panel coordinates (0, 0)
             self.bitmap1 = wx.StaticBitmap(self, -1, bmp1, (0, 0))
@@ -344,16 +344,45 @@ class MainUI(wx.Frame):
         self.nameList = [] # Resets the list so that deleted text is not in the list
 
         if names is None:
-            sql = 'SELECT pupilID, name, present FROM pupils'
+            sql = 'SELECT pupilID, name FROM pupils'
             mycursor.execute(sql)
             names = mycursor.fetchall()
         
-        for i, (ID, name, present) in enumerate(names):
+        now = datetime.now()
+        hourMin = now.hour # finds a timerange
+        hourMax = now.hour + 1
+        timeRange = [now.strftime(f'%Y-%m-%d {hourMin}:00:00'), now.strftime(f'%Y-%m-%d {hourMax}:00:00')]
+        pupilPresInp = tuple(presentPupils)
+        if not pupilPresInp == ():
+            sql = f'SELECT pupilID, override FROM registration WHERE (override is not null) or (pupilID in {pupilPresInp}) and (time >= "{timeRange[0]}" and time < "{timeRange[1]}")'
+            mycursor.execute(sql)
+            ids = mycursor.fetchall()
+        else:
+            sql = f'SELECT pupilID, override FROM registration WHERE (override is not null) or (time >= "{timeRange[0]}" and time < "{timeRange[1]}")'
+            mycursor.execute(sql)
+            ids = mycursor.fetchall()
+
+        newPupPres = []
+        for x in ids:
+            newPupPres.append(x)
+
+        for i, (ID, name) in enumerate(names):
             y = (i*20)+50
             nameStr = wx.StaticText(self.panel, label=name, pos=(10, y))
             presentBox = wx.CheckBox(self.panel, label=str(ID), pos=(150, y)) # checkbox to make pupils present if they havn't been recognised
-            if present == 1:
-                presentBox.SetValue(True)
+            
+            #for checking the last position of the pupil so the override function works
+            currentPupil = []
+            for i in newPupPres:
+                if ID in i:
+                    currentPupil.append(i)
+
+            if currentPupil != []:
+                if currentPupil[-1][1] == 0:
+                    presentBox.SetValue(False)
+                else:
+                    presentBox.SetValue(True)
+
             self.Bind(wx.EVT_CHECKBOX, self.OnChecked) # when the checkbox is clicked change the status of the pupil
             self.nameList.append([nameStr, presentBox])
 
@@ -364,7 +393,8 @@ class MainUI(wx.Frame):
         box = e.GetEventObject()
         ID = box.GetLabel() # gets the ID of the pupil which is the label of the checkbox
         present = box.GetValue() # gets the value of the checkbox
-        sql = f"UPDATE pupils SET present = {present}, override = {present} WHERE pupilID = {ID}"
+        #sql = f"UPDATE pupils SET present = {present}, override = {present} WHERE pupilID = {ID}"
+        sql = f"INSERT INTO registration(pupilID, override) VALUES ({ID}, {present})"
         mycursor.execute(sql)
         mydb.commit()
 
@@ -414,31 +444,30 @@ def isPresent2():
                     mydb.commit()
 
 def isPresent():
-    sql = "SELECT pupilID, time, cameraID, override FROM pupils"
+    presentPupils = []
+    sql = "SELECT pupilID, cameraID, timestamp, date(timestamp) from capdata where date(timestamp) = CURDATE()"
     mycursor.execute(sql)
-    pupils = mycursor.fetchall()
-    for (ID, timeDat, camera, override) in pupils:
-        print(override)
-        if register.isPresent(timeDat) or override:
-            print('True')
-            sql = f"UPDATE pupils SET present = True WHERE pupilID = {ID}"
-            mycursor.execute(sql)
-            mydb.commit()
-        else:
-            sql = f"UPDATE pupils SET present = False WHERE pupilID = {ID}"
-            mycursor.execute(sql)
-            mydb.commit()
-        if register.lessonEnded():
-            print('Lesson Ended')
-            sql = f"UPDATE pupils SET present = False, override = False WHERE pupilID = {ID}"
-            mycursor.execute(sql)
-            mydb.commit()
+    capdata = mycursor.fetchall()
+    for (ID, camera, timeDat, date) in capdata:
+        if timeDat is not None: # makes sure there is a time to be checked             
+            if register.isPresent(timeDat):
+                #sql = f"UPDATE pupils SET present = True WHERE pupilID = {ID}"
+                timeDat = timeDat.strftime("%Y-%m-%d %H:%M:%S")
+                sql = f"INSERT INTO registration(pupilID, camID, time) VALUES ({ID}, {camera}, '{timeDat}')"
+                mycursor.execute(sql)
+                mydb.commit()
+                presentPupils.append(ID)
+            if register.lessonEnded():
+                print('Lesson Ended')
+    return presentPupils
 
 class Registration:
     
     def __init__(self, timetable):
         self.timetable = timetable
         self.currentTime = None
+        self.currentDateTime = None
+        self.currentDate = None
         self.pupilTime = None
         self.lessonNum = len(timetable)
         self.currentLesson = 0
@@ -448,7 +477,8 @@ class Registration:
         self.currentTime = datetime.now().time()
         # converts current time to seconds
         self.currentTime = (datetime.combine(date.min, self.currentTime) - datetime.min).total_seconds()
-        self.pupilTime = pTime.total_seconds()
+        pupilTime = (datetime.combine(date.min, pTime.time()) - datetime.min).total_seconds()
+        self.pupilTime = pupilTime
 
     # converts from string time into seconds
     def convertStrTime(self, time):
@@ -460,6 +490,9 @@ class Registration:
     # find timetable slot
     def isPresent(self, pTime):
         self.getTime(pTime)
+        currentDate = datetime.now()
+        self.currentDate = currentDate.strftime('%Y-%m-%d')
+        self.currentDateTime = currentDate.strftime('%Y-%m-%d %H:%M:%S')
         for i, time in enumerate(self.timetable):
             time1 = self.convertStrTime(self.timetable[time][0])
             time2 = self.convertStrTime(self.timetable[time][1])
@@ -483,15 +516,14 @@ class Registration:
         
 
 
-timetable = {0:["09:00","10:00"],1:["10:00","11:00"],2:["11:00", "12:00"],3:["15:00", "16:00"],4:["18:00", "19:00"]} 
+timetable = {0:["09:00","10:00"],1:["10:00","11:00"],2:["11:00", "12:00"],3:["15:00", "16:00"],4:["18:00", "19:00"],5:["19:00", "20:00"],6:["20:00", "21:00"]} 
 register = Registration(timetable)
 
-isPresent()
+presentPupils = isPresent()
 def main():
     app = wx.App()
     UI = MainUI(None, title='Face Recognition Registration')
     UI.main()
     app.MainLoop()
 
-if __name__ =='__main__':
-    main()
+main()

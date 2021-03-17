@@ -48,7 +48,7 @@ class CheckUnkown():
         sql = self.db.query('pupilID, name, photo, override', 'pupils')
         self.db.cursor.execute(sql)
         results = self.db.cursor.fetchall()
-        for ID, name, photo in results:
+        for ID, name, photo, override in results:
             img = face_recognition.load_image_file(photo)
             encoding = face_recognition.face_encodings(img)[0]
             self.known.append(encoding)
@@ -70,10 +70,12 @@ class CheckUnkown():
         img_array = cv2.imread(img, cv2.IMREAD_GRAYSCALE)
         return img_array
 
-    def update(self, ID):
-        sql = f"UPDATE pupils SET time = now(), cameraID = 2, override = False WHERE pupilID={ID}"
+    def update(self, ID, camID=2):
+        sql = f"INSERT INTO capdata(pupilID, cameraID) VALUES ({ID}, {camID})"
         self.db.cursor.execute(sql)
         self.db.db.commit()
+        sql = f"UPDATE pupils SET override = False where pupilID = {ID}"
+        self.db.cursor.execute(sql)
 
     def loopThroughUnknowns(self):
         for photo in os.listdir(self.pathUnkown):
